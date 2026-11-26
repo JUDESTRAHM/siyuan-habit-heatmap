@@ -2,7 +2,7 @@
   "name": "siyuan-habit-heatmap",
   "author": "JUDESTRAHM",
   "url": "https://github.com/JUDESTRAHM/siyuan-habit-heatmap",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "minAppVersion": "3.2.0",
   "backends": [
     "all"
@@ -33,5 +33,10 @@
     "热力图"
   ],
   "icon": "icon.png",
-  "preview": "preview.png"
+  "preview": "preview.png",
+  "funding": {
+    "custom": [
+      "https://sd-start.judestrahm.workers.dev/gx/sy/checkout?plugin=siyuan-habit-heatmap"
+    ]
+  }
 }
