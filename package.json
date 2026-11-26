@@ -1,0 +1,1 @@
+{"name":"siyuan-habit-heatmap","version":"0.1.0","private":true,"type":"module","scripts":{"build":"node build.mjs","test":"tsx --test test/habits.test.ts"},"license":"MIT","devDependencies":{"esbuild":"^0.28.2","tsx":"^4.23.15","siyuan":"^1.1.0","typescript":"^6.0.3"}}
