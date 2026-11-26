@@ -78,25 +78,25 @@ export function heatGrid(days: Set<string>, today: string, weeks: number, weekSt
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 export interface HeatRow { name: string; days: Set<string> }
-export interface SvgOpts { weeks: number; today: string; weekStart?: number; color?: string; title?: string; labels?: { current: string; longest: string; total: string; rate: string } }
+export interface SvgOpts { weeks: number; today: string; weekStart?: number; color?: string; title?: string; labels?: { current: string; longest: string; total: string; rate: string }; theme?: { bg: string; empty: string; fg: string; muted: string } }
 
 /** One SVG with a GitHub-style heatmap per habit, with streak stats beside each name. */
 export function heatmapSvg(rows: HeatRow[], o: SvgOpts): string {
-	const cell = 11, gap = 3, step = cell + gap, left = 200, top = 46, rowH = 7 * step + 40, ws = o.weekStart ?? 1, color = o.color ?? "#2da44e";
+	const cell = 11, gap = 3, step = cell + gap, left = 200, top = 46, rowH = 7 * step + 40, ws = o.weekStart ?? 1, color = o.color ?? "#2da44e", th = o.theme ?? { bg: "#fff", empty: "#ebedf0", fg: "#1f2328", muted: "#57606a" };
 	const L = o.labels ?? { current: "day streak", longest: "best", total: "days done", rate: "last 30d" };
 	const W = left + o.weeks * step + 24, H = top + rows.length * rowH + 10;
-	let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif"><rect width="${W}" height="${H}" fill="#fff"/>`;
-	if (o.title) s += `<text x="16" y="28" font-size="16" font-weight="600" fill="#1f2328">${esc(o.title)}</text>`;
+	let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif"><rect width="${W}" height="${H}" fill="${th.bg}"/>`;
+	if (o.title) s += `<text x="16" y="28" font-size="16" font-weight="600" fill="${th.fg}">${esc(o.title)}</text>`;
 	rows.forEach((row, i) => {
 		const y0 = top + i * rowH, st = streaks(row.days, o.today);
-		s += `<text x="16" y="${y0 + 14}" font-size="13" font-weight="600" fill="#1f2328">${esc(row.name.slice(0, 22))}</text>`;
-		s += `<text x="16" y="${y0 + 34}" font-size="11" fill="#57606a">${st.current} ${esc(L.current)} · ${st.longest} ${esc(L.longest)}</text>`;
-		s += `<text x="16" y="${y0 + 50}" font-size="11" fill="#57606a">${st.total} ${esc(L.total)} · ${st.rate30}% ${esc(L.rate)}</text>`;
+		s += `<text x="16" y="${y0 + 14}" font-size="13" font-weight="600" fill="${th.fg}">${esc(row.name.slice(0, 22))}</text>`;
+		s += `<text x="16" y="${y0 + 34}" font-size="11" fill="${th.muted}">${st.current} ${esc(L.current)} · ${st.longest} ${esc(L.longest)}</text>`;
+		s += `<text x="16" y="${y0 + 50}" font-size="11" fill="${th.muted}">${st.total} ${esc(L.total)} · ${st.rate30}% ${esc(L.rate)}</text>`;
 		let lastMonth = "";
 		for (const c of heatGrid(row.days, o.today, o.weeks, ws)) {
 			const x = left + c.col * step, y = y0 + 16 + c.row * step;
-			s += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${c.done ? color : "#ebedf0"}"><title>${c.day}${c.done ? " ✓" : ""}</title></rect>`;
-			if (c.row === 0 && c.day.slice(0, 7) !== lastMonth) { lastMonth = c.day.slice(0, 7); s += `<text x="${x}" y="${y0 + 10}" font-size="10" fill="#57606a">${c.day.slice(5, 7)}</text>`; }
+			s += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="2" fill="${c.done ? color : th.empty}"><title>${c.day}${c.done ? " ✓" : ""}</title></rect>`;
+			if (c.row === 0 && c.day.slice(0, 7) !== lastMonth) { lastMonth = c.day.slice(0, 7); s += `<text x="${x}" y="${y0 + 10}" font-size="10" fill="${th.muted}">${c.day.slice(5, 7)}</text>`; }
 		}
 	});
 	return s + "</svg>";
