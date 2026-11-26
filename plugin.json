@@ -1,0 +1,37 @@
+{
+  "name": "siyuan-habit-heatmap",
+  "author": "JUDESTRAHM",
+  "url": "https://github.com/JUDESTRAHM/siyuan-habit-heatmap",
+  "version": "0.1.0",
+  "minAppVersion": "3.2.0",
+  "backends": [
+    "all"
+  ],
+  "frontends": [
+    "all"
+  ],
+  "displayName": {
+    "default": "Habit Heatmap & Streaks",
+    "zh-CN": "习惯热力图与连续打卡"
+  },
+  "description": {
+    "default": "GitHub-style heatmap and streaks for the habits you check off in a SiYuan database. Insert as an image.",
+    "zh-CN": "为数据库中打卡的习惯生成 GitHub 风格热力图和连续天数，可作为图片插入。"
+  },
+  "readme": {
+    "default": "README.md",
+    "zh-CN": "README_zh_CN.md"
+  },
+  "keywords": [
+    "habit",
+    "heatmap",
+    "streak",
+    "tracker",
+    "check-in",
+    "习惯",
+    "打卡",
+    "热力图"
+  ],
+  "icon": "icon.png",
+  "preview": "preview.png"
+}
