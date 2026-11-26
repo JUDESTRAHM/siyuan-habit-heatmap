@@ -70,7 +70,7 @@ export default class HabitHeatmap extends Plugin {
 			box.innerHTML = svg;
 		};
 		const render = async () => {
-			try { table = parseHabitAv(await api("/api/av/renderAttributeView", { id: st.db, blockID: blockOf(), pageSize: 100000, page: 1, createIfNotExist: false })); } catch (e: any) { root.innerHTML = `<p>${esc(String(e.message || e))}</p>`; return; }
+			try { table = parseHabitAv(await api("/api/av/renderAttributeView", { id: st.db, blockID: blockOf(), pageSize: 100000, page: 1, createIfNotExist: false }), (() => { const l = dbs.find((x) => x.avID === st.db)?.label; return l === t.thisDb ? undefined : l; })()); } catch (e: any) { root.innerHTML = `<p>${esc(String(e.message || e))}</p>`; return; }
 			if (!table.dateCols.some((c) => c.id === st.dateCol)) st.dateCol = table.dateCols[0]?.id || "";
 			st.habits = new Set(table.habitCols.map((h) => h.id));
 			root.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px">
