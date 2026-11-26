@@ -1,0 +1,8 @@
+import fs from "node:fs";
+import { heatmapSvg, addDays } from "../src/habits";
+// Sample (made-up) data for the preview image only.
+const today = "2026-11-26";
+const mk = (seed: number, p: number) => { const s = new Set<string>(); let x = seed; for (let i = 0; i < 26 * 7; i++) { x = (x * 1103515245 + 12345) & 0x7fffffff; if ((x % 100) / 100 < p) s.add(addDays(today, -i)); } for (let i = 0; i < 12; i++) s.add(addDays(today, -i)); return s; };
+const svg = heatmapSvg([{ name: "Run", days: mk(3, 0.55) }, { name: "Read 20 min", days: mk(7, 0.7) }, { name: "Meditate", days: mk(11, 0.4) }], { weeks: 26, today, title: "Habits (sample data)" });
+fs.writeFileSync("/tmp/sy2/preview.html", `<body style="margin:0;background:#f3f4f6;font-family:system-ui;width:1024px;height:768px"><div style="padding:40px 32px 8px;font-size:34px;font-weight:600;color:#111">Habit Heatmap &amp; Streaks</div><div style="padding:0 32px;color:#4b5563;font-size:18px">Tick habits in a SiYuan database. See heatmaps and streaks, insert as an image.</div><div style="margin:36px 32px 0;width:960px;overflow:hidden;box-shadow:0 2px 12px #0002;background:#fff"><div style="transform:scale(.97);transform-origin:top left;width:960px">${svg}</div></div><div style="padding:16px 32px;color:#6b7280;font-size:14px">Sample data.</div></body>`);
+fs.writeFileSync("/tmp/sy2/icon.html", `<body style="margin:0"><div style="width:160px;height:160px;background:#2da44e;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:20px;box-sizing:border-box">${Array.from({ length: 25 }, (_, i) => `<div style="border-radius:4px;background:${[0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1][i] ? "#fff" : "#ffffff55"}"></div>`).join("")}</div></body>`);
