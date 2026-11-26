@@ -7,27 +7,32 @@ export function localDay(ms: number): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** Parse the data object returned by /api/av/renderAttributeView. Date-like and checkbox columns only. */
-export function parseHabitAv(data: any): HabitTable {
+/** Parse the data object returned by /api/av/renderAttributeView (real SiYuan 3.8 shapes: table = columns/rows, kanban+gallery = fields/cards, possibly nested in groups).
+ * `title` should be the document name: the kernel returns data.name "" and view.name is just "Table". */
+export function parseHabitAv(data: any, title?: string): HabitTable {
 	const view = data?.view;
 	if (!view) throw new Error("no view in response");
-	const all: any[] = view.columns ?? [];
+	const cols: any[] = view.columns ?? view.fields ?? (view.groups ?? []).find((g: any) => g.fields?.length)?.fields ?? [];
 	const isDate = (t: string) => t === "date" || t === "created" || t === "updated";
-	const dateCols = all.filter((c) => isDate(c.type)).map((c) => ({ id: c.id, name: c.name || "(untitled)" }));
-	const habitCols = all.filter((c) => c.type === "checkbox").map((c) => ({ id: c.id, name: c.name || "(untitled)" }));
-	const rowsSrc: any[] = view.rows ?? (view.groups ?? []).flatMap((g: any) => g.rows ?? []);
-	const rows = rowsSrc.map((r) => {
+	const dateCols = cols.filter((c) => isDate(c.type)).map((c) => ({ id: c.id, name: c.name || "(untitled)" }));
+	const habitCols = cols.filter((c) => c.type === "checkbox").map((c) => ({ id: c.id, name: c.name || "(untitled)" }));
+	// table rows, or kanban/gallery cards (top level or inside groups); each item has cells[] or values[] of {value:{keyID,...}}
+	const items: any[] = [...(view.rows ?? []), ...(view.cards ?? []), ...(view.groups ?? []).flatMap((g: any) => [...(g.rows ?? []), ...(g.cards ?? [])])];
+	const seen = new Set<string>();
+	const rows: HabitTable["rows"] = [];
+	for (const r of items) {
+		if (r.id) { if (seen.has(r.id)) continue; seen.add(r.id); }
 		const byId = new Map<string, any>();
-		(r.cells ?? []).forEach((cell: any, i: number) => byId.set(all[i]?.id ?? "", cell?.value));
+		(r.cells ?? r.values ?? []).forEach((cell: any, i: number) => { const v = cell?.value; byId.set(v?.keyID ?? cols[i]?.id ?? "", v); });
 		const date: Record<string, string> = {}, done: Record<string, boolean> = {};
 		for (const c of dateCols) {
 			const v = byId.get(c.id); const x = v?.date ?? v?.created ?? v?.updated;
 			if (x && x.isNotEmpty !== false && typeof x.content === "number") date[c.id] = localDay(x.content);
 		}
 		for (const c of habitCols) done[c.id] = !!byId.get(c.id)?.checkbox?.checked;
-		return { date, done };
-	});
-	return { title: data.name || view.name || "Database", dateCols, habitCols, rows };
+		rows.push({ date, done });
+	}
+	return { title: title || data.name || view.name || "Database", dateCols, habitCols, rows };
 }
 
 /** Set of days (YYYY-MM-DD) on which the habit was checked. A day counts if ANY row for that day has it checked. */
