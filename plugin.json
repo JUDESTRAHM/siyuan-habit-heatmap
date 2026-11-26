@@ -2,7 +2,7 @@
   "name": "siyuan-habit-heatmap",
   "author": "JUDESTRAHM",
   "url": "https://github.com/JUDESTRAHM/siyuan-habit-heatmap",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "3.2.0",
   "backends": [
     "all"
