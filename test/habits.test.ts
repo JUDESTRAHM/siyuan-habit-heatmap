@@ -61,3 +61,36 @@ test("svg contains rows, escapes names, is well formed", () => {
 	const svg = heatmapSvg([{ name: "Run <5k> & jog", days: new Set(["2026-11-25", "2026-11-26"]) }], { weeks: 10, today: "2026-11-26", title: "T" });
 	assert.ok(svg.startsWith("<svg") && svg.endsWith("</svg>")); assert.ok(svg.includes("Run &lt;5k&gt; &amp; jog")); assert.equal((svg.match(/#2da44e/g) || []).length, 2);
 });
+
+// Real renderAttributeView responses captured from a SiYuan 3.8.12 kernel (10 days, Day date + Run/Read/Meditate checkboxes)
+import { readFileSync } from "node:fs";
+// The fixtures were captured in UTC-7 (local midnight = 07:00 UTC); re-anchor each date to local midnight of its formattedContent so the tests pass in any TZ.
+const real = (n: string) => {
+	const txt = readFileSync(new URL(`./fixtures/real-${n}-3.8.12.json`, import.meta.url), "utf8");
+	return JSON.parse(txt, (_k, v) => { if (v && typeof v === "object" && typeof v.formattedContent === "string" && /^\d{4}-\d\d-\d\d$/.test(v.formattedContent) && typeof v.content === "number") { const [y, m, d] = v.formattedContent.split("-").map(Number); v.content = new Date(y, m - 1, d).getTime(); } return v; }).data;
+};
+for (const kind of ["table", "kanban"]) {
+	test(`real ${kind} JSON: rows, days and streaks`, () => {
+		const t = parseHabitAv(real(kind), "Habits");
+		assert.equal(t.title, "Habits"); assert.equal(t.rows.length, 10);
+		assert.deepEqual(t.habitCols.map((c) => c.name), ["Run", "Read", "Meditate"]); assert.equal(t.dateCols.length, 1);
+		const dc = t.dateCols[0].id, run = t.habitCols[0].id;
+		assert.equal(t.rows[0].date[dc], "2026-11-16"); assert.equal(t.rows[9].date[dc], "2026-11-26");
+		const days = doneDays(t, dc, [run]); assert.equal(days.size, 8);
+		const s = streaks(days, "2026-11-26"); assert.equal(s.current, 2); assert.equal(s.longest, 3); assert.equal(s.since, "2026-11-16");
+		assert.equal(doneDays(t, dc, t.habitCols.map((c) => c.id), "all").size, 2);
+	});
+}
+test("title falls back to doc name over view name", () => {
+	assert.equal(parseHabitAv(real("table")).title, "Table"); // only when caller has no doc name
+	assert.equal(parseHabitAv(real("table"), "My Habits").title, "My Habits");
+});
+test("cells matched by keyID, not array position", () => {
+	const d = real("table"); const r = d.view.rows[0]; r.cells.reverse();
+	const t = parseHabitAv(d, "x"); assert.equal(t.rows[0].date[t.dateCols[0].id], "2026-11-16"); assert.equal(t.rows[0].done[t.habitCols[0].id], true);
+});
+test("dates read in local time, not UTC", () => {
+	const sh = new Date(2026, 10, 20).getTime(); // local midnight whatever TZ runs the test
+	const t = parseHabitAv({ view: { fields: [{ id: "d", type: "date", name: "D" }, { id: "h", type: "checkbox", name: "H" }], cards: [{ id: "c", values: [{ value: { keyID: "d", type: "date", date: { content: sh, isNotEmpty: true } } }, { value: { keyID: "h", type: "checkbox", checkbox: { checked: true } } }] }] } });
+	assert.equal(t.rows[0].date.d, "2026-11-20");
+});
